@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+{% block title %}Create Account — ProjectTrack{% endblock %}
+
+{% block head %}
+<style>
+  .auth-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 16px;
+    background: #0d0b1a;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Decorative background shapes */
+  .deco { position: fixed; pointer-events: none; z-index: 0; }
+  .deco-1 {
+    width: 200px; height: 200px;
+    background: #06d6a0;
+    opacity: 0.10;
+    top: -50px; right: -50px;
+    border-radius: 50%;
+    border: 4px solid #06d6a0;
+  }
+  .deco-2 {
+    width: 130px; height: 130px;
+    background: #4f46e5;
+    opacity: 0.12;
+    bottom: 60px; left: -30px;
+    border: 4px solid #6c63ff;
+    border-radius: 24px;
+    transform: rotate(-12deg);
+  }
+  .deco-3 {
+    width: 70px; height: 70px;
+    background: #ffb703;
+    opacity: 0.12;
+    top: 150px; left: 60px;
+    border: 3px solid #ffcc44;
+    border-radius: 10px;
+    transform: rotate(18deg);
+  }
+  .deco-4 {
+    width: 55px; height: 55px;
+    background: #e84855;
+    opacity: 0.12;
+    bottom: 180px; right: 60px;
+    border: 3px solid #ff6b75;
+    border-radius: 50%;
+  }
+
+  .auth-wrap { position: relative; z-index: 1; width: 100%; max-width: 420px; }
+
+  .card-top-strip {
+    background: #06b88a;
+    border: 3px solid #048a67;
+    border-bottom: none;
+    border-radius: 20px 20px 0 0;
+    padding: 20px 28px 18px;
+  }
+  .brand-text {
+    font-size: 22px;
+    font-weight: 900;
+    color: #fff;
+    letter-spacing: -0.3px;
+  }
+  .brand-text span { color: #a0ffe0; }
+
+  .card-body {
+    background: #1a1728;
+    border: 3px solid #3a3650;
+    border-top: none;
+    border-radius: 0 0 20px 20px;
+    padding: 26px 28px 28px;
+    box-shadow: 6px 6px 0 0 #07050f;
+  }
+
+  .page-title { font-size: 24px; font-weight: 900; color: #f0eeff; margin: 0 0 4px; }
+  .page-sub   { font-size: 13px; font-weight: 700; color: #5a5475; margin: 0 0 24px; }
+
+  .field { margin-bottom: 16px; }
+
+  .submit-btn {
+    width: 100%;
+    margin-top: 22px;
+    padding: 13px;
+    font-size: 16px;
+    font-weight: 900;
+    background: #06b88a;
+    color: #fff;
+    border: 3px solid #048a67;
+    border-radius: 12px;
+    cursor: pointer;
+    box-shadow: 5px 5px 0 0 #07050f;
+    transition: box-shadow 0.1s, transform 0.1s, background 0.1s;
+    font-family: 'Nunito', sans-serif;
+  }
+  .submit-btn:hover  { box-shadow: 6px 6px 0 0 #07050f; transform: translate(-1px,-1px); background: #07d6a0; }
+  .submit-btn:active { box-shadow: 2px 2px 0 0 #07050f; transform: translate(3px,3px); }
+
+  .divider-text {
+    text-align: center;
+    margin-top: 22px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #4a4465;
+  }
+  .divider-text a { color: #8880cc; font-weight: 900; text-decoration: none; transition: color 0.1s; }
+  .divider-text a:hover { color: #c5c0ff; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+  <div class="deco deco-1"></div>
+  <div class="deco deco-2"></div>
+  <div class="deco deco-3"></div>
+  <div class="deco deco-4"></div>
+
+  <div class="auth-wrap">
+
+    <div class="card-top-strip">
+      <div class="brand-text">Project<span>Track</span></div>
+      <div style="font-size:12px; font-weight:700; color:#a0ffe0; margin-top:3px;">Let's get you set up.</div>
+    </div>
+
+    <div class="card-body">
+      <h1 class="page-title">Create account</h1>
+      <p class="page-sub">Free forever, no credit card needed</p>
+
+      <form method="POST" action="{{ url_for('signup') }}" novalidate>
+
+        <div class="field">
+          <label class="ct-label">Username</label>
+          <input type="text" name="username" required autocomplete="username" minlength="3" maxlength="50"
+            class="ct-input" placeholder="johndoe">
+        </div>
+
+        <div class="field">
+          <label class="ct-label">Email</label>
+          <input type="email" name="email" required autocomplete="email"
+            class="ct-input" placeholder="you@example.com">
+        </div>
+
+        <div class="field">
+          <label class="ct-label">Password</label>
+          <input type="password" name="password" required autocomplete="new-password" minlength="6"
+            class="ct-input" placeholder="Min. 6 characters">
+        </div>
+
+        <div class="field">
+          <label class="ct-label">Confirm Password</label>
+          <input type="password" name="confirm_password" required autocomplete="new-password"
+            class="ct-input" placeholder="••••••••">
+        </div>
+
+        <button type="submit" class="submit-btn">Create my account</button>
+      </form>
+
+      <p class="divider-text">
+        Already have one? <a href="{{ url_for('login') }}">Sign in</a>
+      </p>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

@@ -1,14 +1,132 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="h-full">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-    <meta http-equiv="Pragma" content="no-cache" />
-    <meta http-equiv="Expires" content="0" />
-    {% block head %}{% endblock %}
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}ProjectTrack{% endblock %}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Nunito', 'system-ui', 'sans-serif'] }
+        }
+      }
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      background-color: #0d0b1a;
+      color: #f0eeff;
+      font-family: 'Nunito', sans-serif;
+      margin: 0;
+    }
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #3a3650; border-radius: 99px; }
+
+    /* === Cartoony shared system === */
+    .ct-card {
+      background: #1a1728;
+      border: 3px solid #3a3650;
+      border-radius: 20px;
+      box-shadow: 6px 6px 0 0 #0a0812;
+    }
+    .ct-input {
+      width: 100%;
+      background: #110e1e;
+      border: 2.5px solid #3a3650;
+      border-radius: 12px;
+      padding: 11px 16px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      color: #f0eeff;
+      outline: none;
+      box-shadow: 3px 3px 0 0 #07050f;
+      transition: border-color 0.1s, box-shadow 0.1s;
+      display: block;
+    }
+    .ct-input:focus { border-color: #6c63ff; box-shadow: 3px 3px 0 0 #07050f; }
+    .ct-input::placeholder { color: #3a3455; font-weight: 700; }
+    .ct-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #8880cc;
+      margin-bottom: 7px;
+    }
+    .ct-btn {
+      border: 3px solid transparent;
+      border-radius: 12px;
+      font-family: 'Nunito', sans-serif;
+      font-weight: 900;
+      font-size: 15px;
+      padding: 11px 22px;
+      cursor: pointer;
+      box-shadow: 4px 4px 0 0 #07050f;
+      transition: box-shadow 0.1s, transform 0.1s;
+      display: inline-block;
+      text-align: center;
+      text-decoration: none;
+      line-height: 1.4;
+    }
+    .ct-btn:hover  { box-shadow: 5px 5px 0 0 #07050f; transform: translate(-1px,-1px); }
+    .ct-btn:active { box-shadow: 2px 2px 0 0 #07050f; transform: translate(2px,2px); }
+    .ct-btn-primary { background: #4f46e5; color: #fff; border-color: #3730c0; }
+    .ct-btn-primary:hover { background: #5b52f0; }
+    .ct-btn-ghost   { background: #1e1b2e; color: #c0bde8; border-color: #3a3650; }
+    .ct-btn-danger  { background: #e84855; color: #fff; border-color: #b02030; }
+    .ct-btn-warn    { background: #ffb703; color: #1a0f00; border-color: #c08900; }
+
+    /* Drag states */
+    .drag-over { outline: 3px dashed rgba(255,255,255,0.35); outline-offset: -4px; }
+    .dragging  { opacity: 0.3; transform: rotate(2deg) scale(0.97); }
+
+    /* Flash notifications */
+    .flash-note {
+      border-radius: 12px;
+      border: 2.5px solid;
+      padding: 10px 16px;
+      font-size: 13px;
+      font-weight: 800;
+      box-shadow: 3px 3px 0 0 #07050f;
+    }
+    .flash-note.err     { background:#2a0d10; border-color:#e84855; color:#ff8090; }
+    .flash-note.success { background:#0a2010; border-color:#06d6a0; color:#06d6a0; }
+    .flash-note.info    { background:#0d1030; border-color:#4f46e5; color:#9d9fff; }
+  </style>
+  {% block head %}{% endblock %}
 </head>
-<body style="margin:0px;padding:0px; text-align: center;">
-    {% block body %}{% endblock %}
+<body class="h-full antialiased">
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div id="flash-container" style="position:fixed; top:16px; right:16px; z-index:9999;
+                                        display:flex; flex-direction:column; gap:8px;">
+        {% for category, message in messages %}
+          <div class="flash-note {% if category == 'error' %}err{% elif category == 'success' %}success{% else %}info{% endif %}">
+            {{ message }}
+          </div>
+        {% endfor %}
+      </div>
+      <script>
+        setTimeout(() => {
+          document.querySelectorAll('.flash-note').forEach(el => {
+            el.style.transition = 'opacity 0.4s';
+            el.style.opacity = '0';
+            setTimeout(() => el.remove(), 400);
+          });
+        }, 3500);
+      </script>
+    {% endif %}
+  {% endwith %}
+
+  {% block content %}{% endblock %}
 </body>
 </html>

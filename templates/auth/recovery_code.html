@@ -1,0 +1,236 @@
+{% extends 'base.html' %}
+{% block title %}Save Your Recovery Code — ProjectTrack{% endblock %}
+
+{% block head %}
+<style>
+  .auth-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 16px;
+    background: #0d0b1a;
+    position: relative;
+    overflow: hidden;
+  }
+  .deco { position: fixed; pointer-events: none; z-index: 0; }
+  .deco-1 {
+    width: 160px; height: 160px;
+    background: #ffb703; opacity: 0.10;
+    top: -30px; right: -30px;
+    border-radius: 50%;
+    border: 4px solid #ffcc44;
+  }
+  .deco-2 {
+    width: 90px; height: 90px;
+    background: #e84855; opacity: 0.10;
+    bottom: 100px; left: -20px;
+    border-radius: 14px;
+    border: 3px solid #ff6b75;
+    transform: rotate(-10deg);
+  }
+  .auth-wrap { position: relative; z-index: 1; width: 100%; max-width: 460px; }
+
+  .warn-banner {
+    background: #1a1408;
+    border: 3px solid #ffb703;
+    border-radius: 16px;
+    padding: 16px 20px;
+    margin-bottom: 16px;
+    box-shadow: 4px 4px 0 0 #07050f;
+    font-size: 13px;
+    font-weight: 800;
+    color: #c89000;
+    line-height: 1.5;
+  }
+  .warn-banner strong { color: #ffb703; font-weight: 900; }
+
+  .card-top-strip {
+    background: #e8890a;
+    border: 3px solid #b56800;
+    border-bottom: none;
+    border-radius: 20px 20px 0 0;
+    padding: 20px 28px 18px;
+  }
+  .brand-text { font-size: 22px; font-weight: 900; color: #fff; }
+  .brand-text span { color: #ffe5a0; }
+
+  .card-body {
+    background: #1a1728;
+    border: 3px solid #3a3650;
+    border-top: none;
+    border-radius: 0 0 20px 20px;
+    padding: 26px 28px 28px;
+    box-shadow: 6px 6px 0 0 #07050f;
+  }
+
+  .page-title { font-size: 22px; font-weight: 900; color: #f0eeff; margin: 0 0 4px; }
+  .page-sub   { font-size: 13px; font-weight: 700; color: #5a5475; margin: 0 0 20px; }
+
+  .code-box {
+    background: #110e1e;
+    border: 3px solid #3a3650;
+    border-radius: 14px;
+    padding: 20px;
+    box-shadow: inset 2px 2px 0 0 #07050f;
+    margin-bottom: 8px;
+    cursor: text;
+  }
+  .code-text {
+    font-family: monospace;
+    font-size: 18px;
+    letter-spacing: 0.18em;
+    color: #f0eeff;
+    text-align: center;
+    user-select: all;
+    display: block;
+    word-break: break-all;
+  }
+  .code-hint {
+    font-size: 11px;
+    font-weight: 700;
+    color: #3a3455;
+    text-align: center;
+    margin-bottom: 18px;
+  }
+
+  .copy-btn {
+    width: 100%;
+    padding: 12px;
+    font-size: 14px;
+    font-weight: 900;
+    background: #1e1a10;
+    color: #ffb703;
+    border: 3px solid #c08900;
+    border-radius: 12px;
+    cursor: pointer;
+    box-shadow: 4px 4px 0 0 #07050f;
+    transition: box-shadow 0.1s, transform 0.1s;
+    font-family: 'Nunito', sans-serif;
+    margin-bottom: 20px;
+  }
+  .copy-btn:hover  { box-shadow: 5px 5px 0 0 #07050f; transform: translate(-1px,-1px); }
+  .copy-btn:active { box-shadow: 2px 2px 0 0 #07050f; transform: translate(2px,2px); }
+
+  .check-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 22px; }
+  .check-row  { display: flex; align-items: flex-start; gap: 10px; cursor: pointer; }
+  .check-row input { accent-color: #ffb703; width: 17px; height: 17px; margin-top: 2px; flex-shrink: 0; cursor: pointer; }
+  .check-row span  { font-size: 13px; font-weight: 700; color: #7a7890; line-height: 1.4; }
+  .check-row span strong { color: #f0eeff; }
+
+  .proceed-btn {
+    width: 100%;
+    padding: 13px;
+    font-size: 15px;
+    font-weight: 900;
+    border: 3px solid #3a3650;
+    border-radius: 12px;
+    cursor: not-allowed;
+    box-shadow: none;
+    background: #2a2440;
+    color: #4a4465;
+    transition: box-shadow 0.1s, transform 0.1s, background 0.1s;
+    font-family: 'Nunito', sans-serif;
+  }
+  .proceed-btn.ready {
+    background: #ffb703;
+    color: #1a0f00;
+    border-color: #c08900;
+    cursor: pointer;
+    box-shadow: 5px 5px 0 0 #07050f;
+  }
+  .proceed-btn.ready:hover  { box-shadow: 6px 6px 0 0 #07050f; transform: translate(-1px,-1px); }
+  .proceed-btn.ready:active { box-shadow: 2px 2px 0 0 #07050f; transform: translate(3px,3px); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+  <div class="deco deco-1"></div>
+  <div class="deco deco-2"></div>
+
+  <div class="auth-wrap">
+
+    <div class="warn-banner">
+      <strong>This code is shown exactly once.</strong> Once you leave this page it is gone forever.
+      If you lose it, you cannot reset your password without making a new account.
+    </div>
+
+    <div class="card-top-strip">
+      <div class="brand-text">Project<span>Track</span></div>
+      <div style="font-size:12px; font-weight:700; color:#ffe5a0; margin-top:3px;">
+        {% if ctx == 'reset' %}Your new recovery code{% else %}Your recovery code{% endif %}
+      </div>
+    </div>
+
+    <div class="card-body">
+      <h1 class="page-title">
+        {% if ctx == 'reset' %}New recovery code{% else %}Recovery code{% endif %}
+      </h1>
+      <p class="page-sub">
+        {% if ctx == 'reset' %}
+          Password reset done. Save this new code.
+        {% else %}
+          Store this somewhere safe — you'll need it if you forget your password.
+        {% endif %}
+      </p>
+
+      <div class="code-box">
+        <span class="code-text" id="recoveryCode">{{ code }}</span>
+      </div>
+      <p class="code-hint">Click to select all, then copy</p>
+
+      <button class="copy-btn" onclick="copyCode()" id="copyBtn">
+        <span id="copyText">Copy recovery code</span>
+      </button>
+
+      <div class="check-list">
+        <label class="check-row">
+          <input type="checkbox" id="check1">
+          <span>I have written down or securely stored this code</span>
+        </label>
+        <label class="check-row">
+          <input type="checkbox" id="check2">
+          <span>I understand this code will <strong>never be shown again</strong></span>
+        </label>
+      </div>
+
+      <button class="proceed-btn" id="proceedBtn" disabled onclick="proceed()">
+        I've saved it — continue
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  function copyCode() {
+    const code = document.getElementById('recoveryCode').textContent.trim();
+    navigator.clipboard.writeText(code).then(() => {
+      document.getElementById('copyText').textContent = 'Copied!';
+      setTimeout(() => { document.getElementById('copyText').textContent = 'Copy recovery code'; }, 2000);
+    });
+  }
+
+  const c1 = document.getElementById('check1');
+  const c2 = document.getElementById('check2');
+  const btn = document.getElementById('proceedBtn');
+
+  function updateBtn() {
+    if (c1.checked && c2.checked) {
+      btn.disabled = false;
+      btn.classList.add('ready');
+    } else {
+      btn.disabled = true;
+      btn.classList.remove('ready');
+    }
+  }
+  c1.addEventListener('change', updateBtn);
+  c2.addEventListener('change', updateBtn);
+
+  function proceed() {
+    if (!c1.checked || !c2.checked) return;
+    window.location.href = '{{ url_for("dashboard") }}';
+  }
+</script>
+{% endblock %}

@@ -1,0 +1,203 @@
+{% extends 'base.html' %}
+{% block title %}Sign In — ProjectTrack{% endblock %}
+
+{% block head %}
+<style>
+  .auth-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 16px;
+    background: #0d0b1a;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Decorative background shapes */
+  .deco { position: fixed; pointer-events: none; z-index: 0; border-radius: 50%; }
+  .deco-1 {
+    width: 220px; height: 220px;
+    background: #4f46e5;
+    opacity: 0.12;
+    top: -60px; left: -60px;
+    border: 4px solid #6c63ff;
+  }
+  .deco-2 {
+    width: 140px; height: 140px;
+    background: #e84855;
+    opacity: 0.10;
+    bottom: 40px; right: -40px;
+    border: 4px solid #ff6b75;
+    border-radius: 30px;
+    transform: rotate(20deg);
+  }
+  .deco-3 {
+    width: 80px; height: 80px;
+    background: #ffb703;
+    opacity: 0.12;
+    bottom: 200px; left: 30px;
+    border: 3px solid #ffcc44;
+    transform: rotate(10deg);
+  }
+  .deco-4 {
+    width: 50px; height: 50px;
+    background: #06d6a0;
+    opacity: 0.12;
+    top: 120px; right: 80px;
+    border: 3px solid #06d6a0;
+    border-radius: 8px;
+    transform: rotate(-15deg);
+  }
+
+  .auth-wrap { position: relative; z-index: 1; width: 100%; max-width: 420px; }
+
+  /* Brand strip at top of card */
+  .card-top-strip {
+    background: #4f46e5;
+    border: 3px solid #3730c0;
+    border-bottom: none;
+    border-radius: 20px 20px 0 0;
+    padding: 20px 28px 18px;
+  }
+  .brand-text {
+    font-size: 22px;
+    font-weight: 900;
+    color: #fff;
+    letter-spacing: -0.3px;
+  }
+  .brand-text span { color: #c5c0ff; }
+
+  .card-body {
+    background: #1a1728;
+    border: 3px solid #3a3650;
+    border-top: none;
+    border-radius: 0 0 20px 20px;
+    padding: 26px 28px 28px;
+    box-shadow: 6px 6px 0 0 #07050f;
+  }
+
+  .page-title {
+    font-size: 24px;
+    font-weight: 900;
+    color: #f0eeff;
+    margin: 0 0 4px;
+  }
+  .page-sub {
+    font-size: 13px;
+    font-weight: 700;
+    color: #5a5475;
+    margin: 0 0 24px;
+  }
+
+  .field { margin-bottom: 16px; }
+  .field-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 7px; }
+
+  .forgot-link {
+    font-size: 12px;
+    font-weight: 800;
+    color: #8880cc;
+    text-decoration: none;
+    transition: color 0.1s;
+  }
+  .forgot-link:hover { color: #c5c0ff; }
+
+  .remember-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 4px;
+  }
+  .remember-row input { accent-color: #4f46e5; width: 16px; height: 16px; cursor: pointer; }
+  .remember-row label { font-size: 13px; font-weight: 700; color: #6a6485; cursor: pointer; }
+
+  .divider-text {
+    text-align: center;
+    margin-top: 22px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #4a4465;
+  }
+  .divider-text a {
+    color: #8880cc;
+    font-weight: 900;
+    text-decoration: none;
+    transition: color 0.1s;
+  }
+  .divider-text a:hover { color: #c5c0ff; }
+
+  /* Fun submit button */
+  .submit-btn {
+    width: 100%;
+    margin-top: 22px;
+    padding: 13px;
+    font-size: 16px;
+    font-weight: 900;
+    background: #4f46e5;
+    color: #fff;
+    border: 3px solid #3730c0;
+    border-radius: 12px;
+    cursor: pointer;
+    box-shadow: 5px 5px 0 0 #07050f;
+    transition: box-shadow 0.1s, transform 0.1s, background 0.1s;
+    font-family: 'Nunito', sans-serif;
+  }
+  .submit-btn:hover  { box-shadow: 6px 6px 0 0 #07050f; transform: translate(-1px,-1px); background: #5b52f0; }
+  .submit-btn:active { box-shadow: 2px 2px 0 0 #07050f; transform: translate(3px,3px); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+  <!-- Background decorations -->
+  <div class="deco deco-1"></div>
+  <div class="deco deco-2"></div>
+  <div class="deco deco-3"></div>
+  <div class="deco deco-4"></div>
+
+  <div class="auth-wrap">
+
+    <!-- Card top strip with brand -->
+    <div class="card-top-strip">
+      <div class="brand-text">Project<span>Track</span></div>
+      <div style="font-size:12px; font-weight:700; color:#a09cff; margin-top:3px;">Your projects, organized.</div>
+    </div>
+
+    <!-- Card body -->
+    <div class="card-body">
+      <h1 class="page-title">Welcome back</h1>
+      <p class="page-sub">Sign in to continue</p>
+
+      <form method="POST" action="{{ url_for('login') }}" novalidate>
+
+        <div class="field">
+          <label class="ct-label">Email</label>
+          <input type="email" name="email" required autocomplete="email"
+            class="ct-input" placeholder="you@example.com">
+        </div>
+
+        <div class="field">
+          <div class="field-row">
+            <label class="ct-label" style="margin-bottom:0;">Password</label>
+            <a href="{{ url_for('forgot_password') }}" class="forgot-link">Forgot?</a>
+          </div>
+          <input type="password" name="password" required autocomplete="current-password"
+            class="ct-input" placeholder="••••••••">
+        </div>
+
+        <div class="remember-row">
+          <input type="checkbox" name="remember" id="remember">
+          <label for="remember">Keep me signed in</label>
+        </div>
+
+        <button type="submit" class="submit-btn">Sign in</button>
+      </form>
+
+      <p class="divider-text">
+        No account yet? <a href="{{ url_for('signup') }}">Create one free</a>
+      </p>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

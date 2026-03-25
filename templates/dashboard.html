@@ -1,0 +1,456 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard — ProjectTrack{% endblock %}
+
+{% block head %}
+<style>
+  #main-nav {
+    background: #13101f;
+    border-bottom: 3px solid #2a2540;
+    height: 62px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 28px;
+    position: sticky;
+    top: 0;
+    z-index: 40;
+  }
+
+  .nav-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+  }
+  /* "PT" monogram — no clipboard icon */
+  .nav-monogram {
+    width: 38px; height: 38px;
+    border-radius: 10px;
+    background: #4f46e5;
+    border: 3px solid #3730c0;
+    box-shadow: 3px 3px 0 0 #07050f;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 900; color: #fff;
+    letter-spacing: -0.5px;
+    flex-shrink: 0;
+  }
+  .nav-brand {
+    font-size: 17px; font-weight: 900; color: #f0eeff;
+  }
+  .nav-brand span { color: #8880cc; }
+
+  /* User menu */
+  .user-menu-wrap { position: relative; }
+  .user-menu-btn {
+    display: flex; align-items: center; gap: 8px;
+    background: none; border: none; cursor: pointer;
+    padding: 5px 10px; border-radius: 12px;
+    transition: background 0.1s;
+  }
+  .user-menu-btn:hover { background: rgba(255,255,255,0.06); }
+  .user-avatar {
+    width: 34px; height: 34px; border-radius: 50%;
+    background: #4f46e5; border: 3px solid #3730c0;
+    box-shadow: 2px 2px 0 0 #07050f;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 900; color: #fff; flex-shrink: 0;
+  }
+  .user-menu-name { font-size: 13px; font-weight: 800; color: #c0bde8; }
+  .user-dropdown {
+    display: none; position: absolute; right: 0; top: 48px;
+    width: 210px; background: #1a1728;
+    border: 3px solid #3a3650; border-radius: 16px;
+    box-shadow: 6px 6px 0 0 #07050f; overflow: hidden; z-index: 50;
+  }
+  .user-dropdown-head { padding: 12px 16px; border-bottom: 2px solid #2a2540; }
+  .user-dropdown-head p { margin: 0; }
+  .user-dropdown a {
+    display: flex; align-items: center; gap: 10px;
+    padding: 11px 16px; font-size: 13px; font-weight: 800;
+    color: #7a7890; text-decoration: none;
+    transition: background 0.1s, color 0.1s;
+  }
+  .user-dropdown a:hover { background: rgba(255,255,255,0.05); color: #f0eeff; }
+  .user-dropdown a.danger:hover { color: #e84855; }
+
+  /* Stats */
+  .stat-card {
+    background: #1a1728;
+    border: 3px solid #3a3650;
+    border-radius: 16px;
+    box-shadow: 5px 5px 0 0 #07050f;
+    padding: 20px 22px;
+  }
+  .stat-num  { font-size: 34px; font-weight: 900; color: #f0eeff; line-height: 1; }
+  .stat-label{ font-size: 12px; font-weight: 800; color: #5a5470; margin-top: 6px;
+               text-transform: uppercase; letter-spacing: 0.06em; }
+
+  /* Section header */
+  .section-label {
+    font-size: 11px; font-weight: 900;
+    text-transform: uppercase; letter-spacing: 0.1em;
+    color: #4a4465; margin-bottom: 14px;
+  }
+
+  /* Project card */
+  .proj-card {
+    background: #1a1728;
+    border: 3px solid #3a3650;
+    border-radius: 18px;
+    box-shadow: 5px 5px 0 0 #07050f;
+    display: flex; flex-direction: column; overflow: hidden;
+    cursor: pointer; position: relative;
+    transition: border-color 0.12s, box-shadow 0.12s, transform 0.12s;
+  }
+  .proj-card:hover {
+    border-color: #6c63ff;
+    box-shadow: 7px 7px 0 0 #07050f;
+    transform: translate(-2px, -2px);
+  }
+  .proj-card-accent {
+    height: 6px;
+    flex-shrink: 0;
+  }
+  .proj-card-body { padding: 18px 20px; display: flex; flex-direction: column; flex: 1; }
+  .proj-title { font-size: 15px; font-weight: 900; color: #f0eeff; line-height: 1.3; flex: 1; }
+  .proj-desc  {
+    font-size: 12px; font-weight: 700; color: #4a4465;
+    margin-bottom: 14px; line-height: 1.4;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .proj-dot {
+    width: 8px; height: 8px; border-radius: 50%; display: inline-block;
+  }
+  .proj-stat { display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 800; color: #4a4465; }
+  .proj-footer {
+    display: flex; align-items: center; justify-content: space-between;
+    padding-top: 12px; border-top: 2px solid #2a2540; margin-top: auto;
+  }
+
+  /* Delete X button on card */
+  .del-btn {
+    background: none; border: none; cursor: pointer;
+    font-size: 18px; font-weight: 900; line-height: 1; padding: 2px 4px;
+    color: #3a3650; flex-shrink: 0;
+    transition: color 0.1s;
+  }
+  .del-btn:hover { color: #e84855; }
+
+  /* Empty state */
+  .empty-state {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; padding: 80px 0; text-align: center;
+  }
+  .empty-icon {
+    width: 70px; height: 70px; border-radius: 18px;
+    background: #1a1728; border: 3px solid #3a3650;
+    box-shadow: 5px 5px 0 0 #07050f;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px; margin-bottom: 18px;
+  }
+
+  /* Modal backdrop */
+  .modal-backdrop {
+    position: fixed; inset: 0; z-index: 50;
+    background: rgba(0,0,0,0.78);
+    display: none; align-items: center; justify-content: center; padding: 16px;
+  }
+  .modal-box {
+    background: #1a1728;
+    border: 3px solid #3a3650;
+    border-radius: 22px;
+    box-shadow: 8px 8px 0 0 #07050f;
+    width: 100%; max-width: 460px;
+    padding: 28px;
+  }
+  .modal-title { font-size: 20px; font-weight: 900; color: #f0eeff; margin: 0 0 22px; }
+  .modal-close {
+    background: none; border: none; cursor: pointer;
+    font-size: 20px; font-weight: 900; color: #4a4465; line-height: 1;
+    transition: color 0.1s;
+  }
+  .modal-close:hover { color: #e84855; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+{# ── Macro ── #}
+{% macro project_card(project, is_owner) %}
+{% set color_map = {
+  'indigo': '#4f46e5', 'violet': '#8b5cf6', 'sky': '#0ea5e9',
+  'emerald': '#06d6a0', 'rose': '#e84855', 'amber': '#ffb703',
+  'pink': '#ec4899', 'teal': '#14b8a6'
+} %}
+{% set hex = color_map.get(project.color, '#4f46e5') %}
+{% set counts = project.task_counts %}
+
+<div class="proj-card"
+     onclick="window.location.href='{{ url_for('project_board', project_id=project.id) }}'">
+  <div class="proj-card-accent" style="background:{{ hex }};"></div>
+  <div class="proj-card-body">
+
+    <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:10px;">
+      <span class="proj-title">{{ project.title }}</span>
+      {% if is_owner %}
+      <button class="del-btn"
+        onclick="event.stopPropagation(); openModal('deleteModal-{{ project.id }}')"
+        title="Delete project">&#x2715;</button>
+      {% endif %}
+    </div>
+
+    {% if project.description %}
+    <p class="proj-desc">{{ project.description }}</p>
+    {% else %}<div style="margin-bottom:14px;"></div>{% endif %}
+
+    <div style="display:flex; gap:12px; margin-bottom:14px;">
+      <span class="proj-stat"><span class="proj-dot" style="background:#e84855;"></span>{{ counts.todo }} todo</span>
+      <span class="proj-stat"><span class="proj-dot" style="background:#ffb703;"></span>{{ counts.doing }} doing</span>
+      <span class="proj-stat"><span class="proj-dot" style="background:#06d6a0;"></span>{{ counts.done }} done</span>
+    </div>
+
+    <div class="proj-footer">
+      <div style="display:flex;">
+        {% for m in project.members[:5] %}
+          {% set mu = m.user %}{% if mu %}
+          <div style="width:28px; height:28px; border-radius:50%; border:2.5px solid #1a1728;
+                      background:{{ hex }}; color:#fff; font-size:10px; font-weight:900;
+                      display:flex; align-items:center; justify-content:center;
+                      margin-left:{{ '-8px' if not loop.first else '0' }};
+                      position:relative; z-index:{{ 10-loop.index0 }};"
+               title="{{ mu.username }}">{{ mu.initials }}</div>
+          {% endif %}
+        {% endfor %}
+        {% if project.member_count > 5 %}
+        <div style="width:28px; height:28px; border-radius:50%; border:2.5px solid #1a1728;
+                    background:#2a2440; color:#7a7890; font-size:10px; font-weight:900;
+                    display:flex; align-items:center; justify-content:center; margin-left:-8px;">
+          +{{ project.member_count - 5 }}
+        </div>
+        {% endif %}
+      </div>
+      <span style="font-size:11px; font-weight:800; color:#3a3455;">{{ project.created_at.strftime('%b %d') }}</span>
+    </div>
+  </div>
+</div>
+{% endmacro %}
+
+
+<!-- Navbar -->
+<nav id="main-nav">
+  <div class="nav-logo">
+    <div class="nav-monogram">PT</div>
+    <span class="nav-brand">Project<span>Track</span></span>
+  </div>
+
+  <div class="user-menu-wrap" id="userMenu">
+    <button class="user-menu-btn" onclick="toggleUserMenu()">
+      <div class="user-avatar">{{ current_user.initials }}</div>
+      <span class="user-menu-name">{{ current_user.username }}</span>
+      <svg width="11" height="11" fill="none" stroke="#5a5470" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7"/>
+      </svg>
+    </button>
+    <div id="userDropdown" class="user-dropdown">
+      <div class="user-dropdown-head">
+        <p style="font-size:12px; font-weight:900; color:#f0eeff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ current_user.username }}</p>
+        <p style="font-size:11px; font-weight:700; color:#3a3455; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px;">{{ current_user.email }}</p>
+      </div>
+      <a href="{{ url_for('change_password') }}">
+        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+        </svg>
+        Change password
+      </a>
+      <a href="{{ url_for('logout') }}" class="danger" style="border-top:2px solid #2a2540;">
+        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+        </svg>
+        Sign out
+      </a>
+    </div>
+  </div>
+</nav>
+
+
+<main style="max-width:1100px; margin:0 auto; padding:36px 28px;">
+
+  <!-- Header -->
+  <div style="display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap;
+              gap:16px; margin-bottom:30px;">
+    <div>
+      <h1 style="font-size:30px; font-weight:900; color:#f0eeff; margin:0;">Your workspace</h1>
+      <p style="font-size:13px; font-weight:700; color:#4a4465; margin-top:5px;">Manage projects and collaborate with your team.</p>
+    </div>
+    <button onclick="openModal('newProjectModal')" class="ct-btn ct-btn-primary"
+      style="display:flex; align-items:center; gap:8px; font-size:14px; padding:11px 20px;">
+      <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"/>
+      </svg>
+      New Project
+    </button>
+  </div>
+
+  <!-- Stats -->
+  {% set total_owned = owned|length %}
+  {% set total_shared = shared|length %}
+  {% set total_tasks = namespace(n=0) %}
+  {% for p in owned + shared %}
+    {% set c = p.task_counts %}
+    {% set total_tasks.n = total_tasks.n + c.todo + c.doing + c.done %}
+  {% endfor %}
+  <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:36px;">
+    <div class="stat-card" style="border-top:4px solid #4f46e5;">
+      <div class="stat-num">{{ total_owned + total_shared }}</div>
+      <div class="stat-label">Projects</div>
+    </div>
+    <div class="stat-card" style="border-top:4px solid #8b5cf6;">
+      <div class="stat-num">{{ total_owned }}</div>
+      <div class="stat-label">Owned</div>
+    </div>
+    <div class="stat-card" style="border-top:4px solid #0ea5e9;">
+      <div class="stat-num">{{ total_shared }}</div>
+      <div class="stat-label">Shared</div>
+    </div>
+    <div class="stat-card" style="border-top:4px solid #06d6a0;">
+      <div class="stat-num">{{ total_tasks.n }}</div>
+      <div class="stat-label">Total tasks</div>
+    </div>
+  </div>
+
+  <!-- My Projects -->
+  {% if owned %}
+  <section style="margin-bottom:36px;">
+    <p class="section-label">My Projects</p>
+    <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:16px;">
+      {% for project in owned %}{{ project_card(project, is_owner=True) }}{% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- Shared -->
+  {% if shared %}
+  <section>
+    <p class="section-label">Shared with me</p>
+    <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:16px;">
+      {% for project in shared %}{{ project_card(project, is_owner=False) }}{% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- Empty state -->
+  {% if not owned and not shared %}
+  <div class="empty-state">
+    <div class="empty-icon">
+      <svg width="32" height="32" fill="none" stroke="#3a3650" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+          d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+      </svg>
+    </div>
+    <h3 style="font-size:20px; font-weight:900; color:#f0eeff; margin:0 0 8px;">Nothing here yet</h3>
+    <p style="font-size:13px; font-weight:700; color:#4a4465; margin-bottom:22px;">Create your first project and start getting things done.</p>
+    <button onclick="openModal('newProjectModal')" class="ct-btn ct-btn-primary" style="font-size:14px; padding:11px 22px;">
+      Create a project
+    </button>
+  </div>
+  {% endif %}
+
+</main>
+
+
+<!-- New Project Modal -->
+<div id="newProjectModal" class="modal-backdrop">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:22px;">
+      <h2 class="modal-title" style="margin-bottom:0;">New Project</h2>
+      <button class="modal-close" onclick="closeModal('newProjectModal')">&#x2715;</button>
+    </div>
+    <form method="POST" action="{{ url_for('create_project') }}">
+      <div style="display:flex; flex-direction:column; gap:16px;">
+        <div>
+          <label class="ct-label">Project name <span style="color:#e84855;">*</span></label>
+          <input type="text" name="title" required maxlength="100"
+            class="ct-input" placeholder="e.g. Website Redesign">
+        </div>
+        <div>
+          <label class="ct-label">Description</label>
+          <textarea name="description" rows="3" maxlength="500"
+            class="ct-input" placeholder="What's this project about?" style="resize:none;"></textarea>
+        </div>
+        <div>
+          <label class="ct-label" style="margin-bottom:10px;">Color</label>
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            {% for color, hex in [('indigo','#4f46e5'),('violet','#8b5cf6'),('sky','#0ea5e9'),('emerald','#06d6a0'),('rose','#e84855'),('amber','#ffb703'),('pink','#ec4899'),('teal','#14b8a6')] %}
+            <label style="cursor:pointer; position:relative;">
+              <input type="radio" name="color" value="{{ color }}" class="peer sr-only" {% if color == 'indigo' %}checked{% endif %}>
+              <span style="display:block; width:30px; height:30px; border-radius:50%;
+                           background:{{ hex }}; border:3px solid transparent;
+                           box-shadow:2px 2px 0 0 #07050f; transition:border-color 0.1s;"
+                    class="peer-checked:[border-color:white]"></span>
+            </label>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+      <div style="display:flex; gap:10px; margin-top:24px;">
+        <button type="button" onclick="closeModal('newProjectModal')"
+          class="ct-btn ct-btn-ghost" style="flex:1; padding:11px;">Cancel</button>
+        <button type="submit"
+          class="ct-btn ct-btn-primary" style="flex:1; padding:11px;">Create Project</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Delete modals -->
+{% for project in owned %}
+<div id="deleteModal-{{ project.id }}" class="modal-backdrop">
+  <div class="modal-box" style="max-width:380px;" onclick="event.stopPropagation()">
+    <h3 style="font-size:20px; font-weight:900; color:#f0eeff; margin:0 0 10px;">Delete project?</h3>
+    <p style="font-size:13px; font-weight:700; color:#7a7890; margin:0 0 24px; line-height:1.5;">
+      "<strong style="color:#f0eeff;">{{ project.title }}</strong>" and all its tasks will be
+      permanently deleted. This cannot be undone.
+    </p>
+    <div style="display:flex; gap:10px;">
+      <button onclick="closeModal('deleteModal-{{ project.id }}')"
+        class="ct-btn ct-btn-ghost" style="flex:1; padding:11px;">Cancel</button>
+      <form method="POST" action="{{ url_for('delete_project', project_id=project.id) }}" style="flex:1;">
+        <button type="submit" class="ct-btn ct-btn-danger" style="width:100%; padding:11px;">Delete</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endfor %}
+
+
+<script>
+  function toggleUserMenu() {
+    const dd = document.getElementById('userDropdown');
+    dd.style.display = dd.style.display === 'block' ? 'none' : 'block';
+  }
+  document.addEventListener('click', e => {
+    const wrap = document.getElementById('userMenu');
+    if (wrap && !wrap.contains(e.target))
+      document.getElementById('userDropdown').style.display = 'none';
+  });
+
+  function openModal(id) {
+    const el = document.getElementById(id);
+    el.style.display = 'flex';
+    const close = e => { if (e.target === el) { closeModal(id); el.removeEventListener('click', close); } };
+    el.addEventListener('click', close);
+  }
+  function closeModal(id) {
+    document.getElementById(id).style.display = 'none';
+  }
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape')
+      document.querySelectorAll('.modal-backdrop').forEach(el => {
+        if (el.style.display === 'flex') closeModal(el.id);
+      });
+  });
+</script>
+
+{% endblock %}

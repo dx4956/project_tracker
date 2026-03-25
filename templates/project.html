@@ -1,0 +1,573 @@
+{% extends 'base.html' %}
+{% block title %}{{ project.title }} — ProjectTrack{% endblock %}
+
+{% block head %}
+<style>
+  body { background: #0d0b1a !important; }
+
+  #page-root {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* ── Navbar ── */
+  #main-nav {
+    flex-shrink: 0;
+    height: 62px;
+    background: #13101f;
+    border-bottom: 3px solid #2a2540;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    gap: 16px;
+  }
+
+  .back-btn {
+    display: flex; align-items: center; gap: 7px;
+    padding: 7px 14px;
+    background: #1e1b2e;
+    border: 3px solid #3a3650;
+    border-radius: 12px;
+    box-shadow: 3px 3px 0 0 #07050f;
+    text-decoration: none;
+    color: #c0bde8;
+    font-size: 13px; font-weight: 800;
+    flex-shrink: 0;
+    transition: border-color 0.1s, color 0.1s, box-shadow 0.1s, transform 0.1s;
+  }
+  .back-btn:hover {
+    border-color: #5a5470; color: #f0eeff;
+    box-shadow: 4px 4px 0 0 #07050f; transform: translate(-1px,-1px);
+  }
+
+  .project-dot {
+    width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0;
+    border: 2.5px solid rgba(255,255,255,0.25);
+  }
+
+  .project-name {
+    font-size: 15px; font-weight: 900; color: #f0eeff;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+
+  .team-btn {
+    padding: 7px 14px;
+    background: #1e1b2e;
+    border: 3px solid #3a3650;
+    border-radius: 12px;
+    box-shadow: 3px 3px 0 0 #07050f;
+    font-size: 12px; font-weight: 900; color: #c0bde8;
+    cursor: pointer; font-family: 'Nunito', sans-serif;
+    transition: border-color 0.1s, color 0.1s, box-shadow 0.1s, transform 0.1s;
+  }
+  .team-btn:hover {
+    border-color: #5a5470; color: #f0eeff;
+    box-shadow: 4px 4px 0 0 #07050f; transform: translate(-1px,-1px);
+  }
+
+  .signout-link {
+    font-size: 12px; font-weight: 800; color: #4a4465; text-decoration: none;
+    padding: 7px 10px; border-radius: 10px;
+    transition: color 0.1s, background 0.1s;
+  }
+  .signout-link:hover { color: #e84855; background: rgba(232,72,85,0.08); }
+
+  /* ── Board area ── */
+  #board-area {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    gap: 14px;
+    padding: 18px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    /* subtle dot grid background */
+    background-image: radial-gradient(circle, #2a2540 1px, transparent 1px);
+    background-size: 22px 22px;
+    background-color: #0d0b1a;
+  }
+
+  /* ── Columns ── */
+  .kanban-column {
+    flex: 1;
+    min-width: 250px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .col-header {
+    flex-shrink: 0;
+    border-radius: 16px 16px 0 0;
+    border: 3px solid #07050f;
+    border-bottom: none;
+    padding: 13px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .col-todo  .col-header { background: #e84855; }
+  .col-doing .col-header { background: #f5a500; }
+  .col-done  .col-header { background: #06d6a0; }
+
+  .col-header-label { font-size: 14px; font-weight: 900; letter-spacing: 0.01em; }
+  .col-todo  .col-header-label { color: #fff; }
+  .col-doing .col-header-label { color: #1a0900; }
+  .col-done  .col-header-label { color: #003d2a; }
+
+  .count-badge {
+    font-size: 11px; font-weight: 900;
+    background: rgba(0,0,0,0.22);
+    border-radius: 99px; padding: 1px 9px;
+  }
+  .col-todo  .count-badge { color: #fff; }
+  .col-doing .count-badge { color: #1a0900; }
+  .col-done  .count-badge { color: #003d2a; }
+
+  .add-btn {
+    width: 30px; height: 30px; border-radius: 50%;
+    border: 2.5px solid rgba(0,0,0,0.3);
+    background: rgba(0,0,0,0.18);
+    font-size: 20px; font-weight: 900; line-height: 1;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; flex-shrink: 0;
+    transition: background 0.1s, transform 0.1s;
+  }
+  .col-todo  .add-btn { color: #fff; border-color: rgba(255,255,255,0.35); }
+  .col-doing .add-btn { color: #1a0900; }
+  .col-done  .add-btn { color: #003d2a; }
+  .add-btn:hover { background: rgba(0,0,0,0.3); transform: scale(1.1); }
+
+  /* ── Column body ── */
+  .col-body {
+    flex: 1; min-height: 0;
+    overflow-y: auto;
+    border: 3px solid #07050f;
+    border-top: none;
+    border-radius: 0 0 16px 16px;
+    padding: 12px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .col-todo  .col-body { background: #1c0f14; }
+  .col-doing .col-body { background: #1a1108; }
+  .col-done  .col-body { background: #081a12; }
+
+  .col-body::-webkit-scrollbar { width: 3px; }
+  .col-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 99px; }
+
+  /* ── Task cards ── */
+  .task-card {
+    background: #1e1b2e;
+    border: 2.5px solid #3a3650;
+    border-radius: 14px;
+    padding: 13px 14px;
+    cursor: grab;
+    user-select: none;
+    box-shadow: 4px 4px 0 0 #07050f;
+    transition: box-shadow 0.1s, transform 0.1s, border-color 0.1s;
+    position: relative;
+  }
+  .task-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 6px; bottom: 6px;
+    width: 3px; border-radius: 0 3px 3px 0;
+    background: #3a3650;
+  }
+  .task-card:hover {
+    box-shadow: 6px 6px 0 0 #07050f;
+    transform: translate(-2px, -2px);
+    border-color: #6c63ff;
+  }
+  .task-card:hover::before { background: #6c63ff; }
+  .task-card:active { cursor: grabbing; }
+
+  .dragging { opacity: 0.25; transform: rotate(3deg) scale(0.95); }
+  .drag-over { outline: 3px dashed rgba(108,99,255,0.6); outline-offset: -4px; }
+
+  .task-title {
+    flex: 1; font-size: 13px; font-weight: 800;
+    line-height: 1.4; color: #e8e4ff; margin: 0;
+  }
+  .task-desc {
+    font-size: 11px; color: #6a6485; font-weight: 700;
+    margin: 7px 0 0; line-height: 1.5;
+    display: -webkit-box; -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical; overflow: hidden;
+    white-space: pre-line;
+  }
+  .task-date {
+    font-size: 10px; color: #3a3455; font-weight: 700;
+  }
+
+  /* ── Priority badges ── */
+  .badge-high     { background:#e84855; color:#fff;    border:2px solid rgba(0,0,0,0.3); }
+  .badge-moderate { background:#f5a500; color:#1a0900; border:2px solid rgba(0,0,0,0.2); }
+  .badge-low      { background:#06d6a0; color:#003d2a; border:2px solid rgba(0,0,0,0.2); }
+
+  /* ── Empty placeholder ── */
+  .empty-placeholder {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 800; color: #2a2440; padding: 32px 0;
+    border: 2px dashed #2a2440; border-radius: 12px;
+    letter-spacing: 0.05em; text-transform: uppercase;
+  }
+
+  /* ── Modals ── */
+  .modal-backdrop {
+    position: fixed; inset: 0; z-index: 50;
+    background: rgba(0,0,0,0.8);
+    display: none; align-items: center; justify-content: center; padding: 16px;
+  }
+  .modal-box {
+    background: #1a1728;
+    border: 3px solid #3a3650;
+    border-radius: 22px;
+    box-shadow: 8px 8px 0 0 #07050f;
+    width: 100%; max-width: 440px;
+    padding: 28px;
+    color: #f0eeff;
+  }
+  .modal-close {
+    background: none; border: none; cursor: pointer;
+    font-size: 20px; font-weight: 900; color: #4a4465; line-height: 1;
+    transition: color 0.1s;
+  }
+  .modal-close:hover { color: #e84855; }
+
+  /* Inputs / buttons inside modals */
+  .m-input {
+    width: 100%; background: #110e1e;
+    border: 2.5px solid #3a3650; border-radius: 12px;
+    padding: 11px 14px;
+    font-family: 'Nunito', sans-serif; font-size: 14px; font-weight: 700;
+    color: #f0eeff; outline: none;
+    box-shadow: 3px 3px 0 0 #07050f;
+    transition: border-color 0.1s;
+  }
+  .m-input:focus { border-color: #6c63ff; }
+  .m-input::placeholder { color: #3a3455; }
+
+  .m-label {
+    display: block; font-size: 11px; font-weight: 900;
+    text-transform: uppercase; letter-spacing: 0.07em;
+    color: #8880cc; margin-bottom: 7px;
+  }
+
+  .m-btn {
+    border: 2.5px solid transparent; border-radius: 11px;
+    font-family: 'Nunito', sans-serif; font-weight: 900; font-size: 14px;
+    padding: 10px 18px; cursor: pointer;
+    box-shadow: 3px 3px 0 0 #07050f;
+    transition: box-shadow 0.1s, transform 0.1s;
+  }
+  .m-btn:hover  { box-shadow: 4px 4px 0 0 #07050f; transform: translate(-1px,-1px); }
+  .m-btn:active { box-shadow: 1px 1px 0 0 #07050f; transform: translate(2px,2px); }
+  .m-btn-primary { background:#4f46e5; color:#fff; border-color:#3730c0; }
+  .m-btn-ghost   { background:#1e1b2e; color:#c0bde8; border-color:#3a3650; }
+  .m-btn-danger  { background:#e84855; color:#fff; border-color:#b02030; }
+
+  /* Member list rows */
+  .member-row {
+    display: flex; align-items: center; justify-content: space-between;
+    background: #13101f; border: 2.5px solid #3a3650;
+    border-radius: 12px; padding: 10px 14px;
+  }
+</style>
+{% endblock %}
+
+
+{% block content %}
+
+{% set color_map = {
+  'indigo': '#4f46e5', 'violet': '#8b5cf6', 'sky': '#0ea5e9',
+  'emerald': '#06d6a0', 'rose': '#e84855', 'amber': '#f5a500',
+  'pink': '#ec4899', 'teal': '#14b8a6'
+} %}
+{% set accent = color_map.get(project.color, '#4f46e5') %}
+
+
+{% macro task_card(task, can_delete=False) %}
+<div class="task-card"
+     draggable="true"
+     data-id="{{ task.id }}"
+     data-container="{{ task.container }}"
+     ondragstart="onDragStart(event, this)"
+     ondragend="onDragEnd(event, this)">
+
+  <div style="display:flex; align-items:flex-start; gap:8px; padding-left:8px;">
+    <p class="task-title">{{ task.title }}</p>
+    {% if can_delete %}
+    <button onclick="deleteTask({{ task.id }}, this)" title="Delete"
+      style="background:none; border:none; cursor:pointer; font-size:15px; font-weight:900;
+             color:#3a3455; line-height:1; padding:0; flex-shrink:0; margin-top:1px;
+             transition:color 0.1s;"
+      onmouseover="this.style.color='#e84855'"
+      onmouseout="this.style.color='#3a3455'">&#x2715;</button>
+    {% endif %}
+  </div>
+
+  {% if task.description %}
+  <p class="task-desc" style="padding-left:8px;">{{ task.description }}</p>
+  {% endif %}
+
+  <div style="display:flex; align-items:center; justify-content:space-between; margin-top:10px; padding-left:8px;">
+    {% if task.priority != 'none' %}
+    <span class="badge-{{ task.priority }}"
+          style="font-size:10px; font-weight:900; text-transform:uppercase; letter-spacing:0.05em;
+                 padding:2px 9px; border-radius:99px;">{{ task.priority }}</span>
+    {% else %}<span></span>{% endif %}
+    <span class="task-date">{{ task.created_at }}</span>
+  </div>
+</div>
+{% endmacro %}
+
+
+<div id="page-root">
+
+  <!-- Navbar -->
+  <nav id="main-nav">
+
+    <div style="display:flex; align-items:center; gap:12px; min-width:0; overflow:hidden;">
+      <a href="{{ url_for('dashboard') }}" class="back-btn" title="Dashboard">
+        <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+        </svg>
+        Dashboard
+      </a>
+
+      <div class="project-dot" style="background:{{ accent }};"></div>
+
+      <h1 class="project-name">{{ project.title }}</h1>
+    </div>
+
+    <div style="display:flex; align-items:center; gap:10px; flex-shrink:0;">
+
+      <!-- Member avatars -->
+      <button onclick="openModal('memberModal')"
+        style="display:flex; align-items:center; background:none; border:none; cursor:pointer; padding:0;">
+        {% for m in members[:4] %}
+        <div style="width:32px; height:32px; border-radius:50%;
+                    border:3px solid #13101f;
+                    background:{{ accent }}; color:white;
+                    font-size:10px; font-weight:900;
+                    display:flex; align-items:center; justify-content:center;
+                    margin-left:{{ '-9px' if not loop.first else '0' }};
+                    position:relative; z-index:{{ 10 - loop.index0 }};
+                    box-shadow:2px 2px 0 0 #07050f;"
+             title="{{ m.user.username }}{% if m.role == 'owner' %} (owner){% endif %}">
+          {{ m.user.initials }}
+        </div>
+        {% endfor %}
+        {% if members|length > 4 %}
+        <div style="width:32px; height:32px; border-radius:50%; border:3px solid #13101f;
+                    background:#2a2440; color:#8885aa; font-size:10px; font-weight:900;
+                    display:flex; align-items:center; justify-content:center; margin-left:-9px;
+                    box-shadow:2px 2px 0 0 #07050f;">
+          +{{ members|length - 4 }}
+        </div>
+        {% endif %}
+      </button>
+
+      <button onclick="openModal('memberModal')" class="team-btn">
+        {{ '+ Team' if is_owner else 'Team' }}
+      </button>
+
+      <a href="{{ url_for('logout') }}" class="signout-link">Sign out</a>
+    </div>
+  </nav>
+
+
+  <!-- Board -->
+  <div id="board-area">
+
+    {% set columns = [
+      ('todo',  'To Do',       todo),
+      ('doing', 'In Progress', doing),
+      ('done',  'Done',        done),
+    ] %}
+
+    {% for col_id, col_label, col_tasks in columns %}
+    <div class="kanban-column col-{{ col_id }}">
+
+      <div class="col-header">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span class="col-header-label">{{ col_label }}</span>
+          <span class="count-badge" id="count-{{ col_id }}">{{ col_tasks|length }}</span>
+        </div>
+        <button class="add-btn" onclick="openAddModal('{{ col_id }}')" title="Add task">+</button>
+      </div>
+
+      <div class="col-body"
+           id="col-{{ col_id }}"
+           data-container="{{ col_id }}"
+           ondragover="onDragOver(event)"
+           ondragenter="onDragEnter(event, this)"
+           ondragleave="onDragLeave(event, this)"
+           ondrop="onDrop(event, this)">
+
+        {% for task in col_tasks %}
+        {{ task_card(task, is_owner) }}
+        {% endfor %}
+
+        <div class="empty-placeholder {% if col_tasks|length > 0 %}hidden{% endif %}">
+          Drop here
+        </div>
+
+      </div>
+    </div>
+    {% endfor %}
+
+  </div>
+</div>
+
+
+<!-- Add Task Modal -->
+<div id="addTaskModal" class="modal-backdrop">
+  <div class="modal-box" onclick="event.stopPropagation()">
+
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;">
+      <div>
+        <h2 style="font-size:18px; font-weight:900; margin:0; color:#f0eeff;">New Task</h2>
+        <p id="addTaskColLabel" style="font-size:12px; color:#6a6485; font-weight:700; margin:3px 0 0;"></p>
+      </div>
+      <button class="modal-close" onclick="closeModal('addTaskModal')">&#x2715;</button>
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:16px;">
+
+      <div>
+        <label class="m-label">Title <span style="color:#e84855;">*</span></label>
+        <input type="text" id="taskTitle" maxlength="100"
+               class="m-input" placeholder="What needs doing?">
+      </div>
+
+      <div>
+        <label class="m-label">Description</label>
+        <textarea id="taskDesc" rows="3"
+                  class="m-input" placeholder="Any details..." style="resize:none;"></textarea>
+      </div>
+
+      <div>
+        <label class="m-label">Priority</label>
+        <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:8px;">
+          {% for val, label, bg, tc, bc in [
+              ('none',     'None', '#1e1b2e', '#6a6485', '#3a3650'),
+              ('low',      'Low',  '#06d6a0', '#003d2a', '#04a076'),
+              ('moderate', 'Med',  '#f5a500', '#1a0900', '#c07a00'),
+              ('high',     'High', '#e84855', '#fff',    '#b02030')
+          ] %}
+          <label style="cursor:pointer;">
+            <input type="radio" name="taskPriority" value="{{ val }}" class="peer sr-only"
+                   {% if val == 'none' %}checked{% endif %}>
+            <span style="display:block; text-align:center; font-size:12px; font-weight:900;
+                         padding:9px 4px; border-radius:10px; border:2.5px solid {{ bc }};
+                         background:{{ bg }}; color:{{ tc }}; cursor:pointer;
+                         box-shadow:2px 2px 0 0 #07050f; transition:box-shadow 0.1s;"
+                  class="peer-checked:[outline:3px_solid_white] peer-checked:[outline-offset:2px]">
+              {{ label }}
+            </span>
+          </label>
+          {% endfor %}
+        </div>
+      </div>
+
+    </div>
+
+    <div style="display:flex; gap:10px; margin-top:22px;">
+      <button onclick="closeModal('addTaskModal')" class="m-btn m-btn-ghost" style="flex:1;">Cancel</button>
+      <button onclick="submitAddTask()" class="m-btn m-btn-primary" style="flex:1;">Add Task</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- Team Members Modal -->
+<div id="memberModal" class="modal-backdrop">
+  <div class="modal-box" onclick="event.stopPropagation()">
+
+    <div style="display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:18px;">
+      <div>
+        <h2 style="font-size:18px; font-weight:900; margin:0; color:#f0eeff;">Team</h2>
+        <p style="font-size:12px; color:#6a6485; font-weight:700; margin:3px 0 0;">
+          {{ members|length }} member{{ 's' if members|length != 1 }}
+        </p>
+      </div>
+      <button class="modal-close" onclick="closeModal('memberModal')">&#x2715;</button>
+    </div>
+
+    {% if not is_owner %}
+    <div style="background:#1a1408; border:2.5px solid #f5a500; border-radius:12px;
+                padding:10px 14px; font-size:12px; font-weight:800; color:#c88000; margin-bottom:14px;
+                box-shadow:3px 3px 0 0 #07050f;">
+      You can add and move tasks. Only the owner can delete tasks or manage members.
+    </div>
+    {% endif %}
+
+    <ul id="memberList" style="list-style:none; padding:0; margin:0;
+                                display:flex; flex-direction:column; gap:8px;
+                                max-height:260px; overflow-y:auto;">
+      {% for m in members %}
+      <li id="member-row-{{ m.user.id }}" class="member-row">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div style="width:36px; height:36px; border-radius:50%; border:2.5px solid #3a3650;
+                      background:{{ accent }}; color:white; font-size:11px; font-weight:900;
+                      display:flex; align-items:center; justify-content:center; flex-shrink:0;
+                      box-shadow:2px 2px 0 0 #07050f;">
+            {{ m.user.initials }}
+          </div>
+          <div>
+            <div style="display:flex; align-items:center; gap:7px;">
+              <span style="font-size:13px; font-weight:900; color:#e8e4ff;">{{ m.user.username }}</span>
+              {% if m.role == 'owner' %}
+              <span style="font-size:10px; font-weight:900; background:#4f46e5; color:white;
+                           padding:2px 9px; border-radius:99px; border:2px solid #3730c0;
+                           box-shadow:1px 1px 0 0 #07050f;">Owner</span>
+              {% endif %}
+            </div>
+            <span style="font-size:11px; color:#4a4465; font-weight:700;">{{ m.user.email }}</span>
+          </div>
+        </div>
+        {% if is_owner and m.role != 'owner' %}
+        <button onclick="removeMember({{ m.user.id }}, '{{ m.user.username | replace("'", "\\'") }}')"
+          class="m-btn m-btn-danger"
+          style="padding:5px 12px; font-size:11px; box-shadow:2px 2px 0 #07050f;">
+          Remove
+        </button>
+        {% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+
+    {% if is_owner %}
+    <div style="border-top:2.5px solid #2a2540; margin-top:16px; padding-top:16px;">
+      <label class="m-label">Add by username or email</label>
+      <p style="font-size:11px; color:#4a4465; font-weight:700; margin:0 0 10px;">
+        They need an account on ProjectTrack first.
+      </p>
+      <div style="display:flex; gap:8px;">
+        <input type="text" id="memberInput" autocomplete="off"
+               class="m-input" placeholder="username or email" style="flex:1;">
+        <button onclick="submitAddMember()" class="m-btn m-btn-primary" style="white-space:nowrap;">Add</button>
+      </div>
+      <p id="memberError"
+         style="font-size:12px; font-weight:800; color:#e84855; margin-top:8px; display:none;"></p>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+
+
+<script>
+  const PROJECT_ID      = {{ project.id }};
+  const IS_OWNER        = {{ 'true' if is_owner else 'false' }};
+  const CURRENT_USER_ID = {{ current_user.id }};
+</script>
+<script src="{{ url_for('static', filename='js/kanban.js') }}"></script>
+
+{% endblock %}
