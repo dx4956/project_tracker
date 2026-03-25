@@ -568,6 +568,11 @@
   const IS_OWNER        = {{ 'true' if is_owner else 'false' }};
   const CURRENT_USER_ID = {{ current_user.id }};
 </script>
-<script src="{{ url_for('static', filename='js/kanban.js') }}"></script>
+<script src="{{ url_for('static', filename='js/utils.js') }}"></script>
+<script src="{{ url_for('static', filename='js/drag.js') }}"></script>
+<script src="{{ url_for('static', filename='js/tasks.js') }}"></script>
+<script src="{{ url_for('static', filename='js/members.js') }}"></script>
+<script src="{{ url_for('static', filename='js/events.js') }}"></script>
+<script src="{{ url_for('static', filename='js/sse.js') }}"></script>
 
 {% endblock %}

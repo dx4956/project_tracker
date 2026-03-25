@@ -1,5 +1,7 @@
 import os
 import json
+from dotenv import load_dotenv
+load_dotenv()
 import queue
 import secrets
 import threading
@@ -10,7 +12,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'change-this-in-production')
+app.config['SECRET_KEY'] = os.environ['SECRET_KEY']
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///projecttracker.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
