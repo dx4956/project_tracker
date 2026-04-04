@@ -315,6 +315,27 @@
   <p class="task-desc" style="padding-left:8px;">{{ task.description }}</p>
   {% endif %}
 
+  {% if task.due_in_days is not none %}
+  <div style="padding-left:8px; margin-top:6px;">
+    {% if task.due_in_days < 0 %}
+    <span style="font-size:10px; font-weight:900; background:#e84855; color:#fff;
+                 border:2px solid #b02030; padding:2px 9px; border-radius:99px;">
+      {{ task.due_in_days | abs }} day{{ 's' if task.due_in_days | abs != 1 }} overdue
+    </span>
+    {% elif task.due_in_days == 0 %}
+    <span style="font-size:10px; font-weight:900; background:#f5a500; color:#1a0900;
+                 border:2px solid #c07a00; padding:2px 9px; border-radius:99px;">
+      Due today
+    </span>
+    {% else %}
+    <span style="font-size:10px; font-weight:900; background:#4f46e5; color:#fff;
+                 border:2px solid #3730c0; padding:2px 9px; border-radius:99px;">
+      {{ task.due_in_days }} day{{ 's' if task.due_in_days != 1 }} left
+    </span>
+    {% endif %}
+  </div>
+  {% endif %}
+
   <div style="display:flex; align-items:center; justify-content:space-between; margin-top:10px; padding-left:8px;">
     {% if task.priority != 'none' %}
     <span class="badge-{{ task.priority }}"
@@ -450,6 +471,12 @@
         <label class="m-label">Description</label>
         <textarea id="taskDesc" rows="3"
                   class="m-input" placeholder="Any details..." style="resize:none;"></textarea>
+      </div>
+
+      <div>
+        <label class="m-label">Complete in (days)</label>
+        <input type="number" id="taskDueDays" min="0" max="999"
+               class="m-input" placeholder="e.g. 3 — leave blank for no deadline" style="appearance:textfield;">
       </div>
 
       <div>

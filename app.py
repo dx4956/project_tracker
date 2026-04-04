@@ -8,7 +8,7 @@ load_dotenv()
 import queue
 import secrets
 import threading
-from datetime import datetime
+from datetime import datetime, timedelta, date
 
 from flask import (
     Flask,
@@ -160,8 +160,12 @@ class Task(db.Model):
     priority = db.Column(db.String(10), default="none")  # none | low | moderate | high
     created_by = db.Column(db.Integer, db.ForeignKey("user.id"))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    due_date = db.Column(db.Date, nullable=True)
 
     def to_dict(self):
+        due_in_days = None
+        if self.due_date:
+            due_in_days = (self.due_date - date.today()).days
         return {
             "id": self.id,
             "title": self.title,
@@ -169,6 +173,8 @@ class Task(db.Model):
             "container": self.container,
             "priority": self.priority,
             "created_at": self.created_at.strftime("%b %d, %Y"),
+            "due_date": self.due_date.isoformat() if self.due_date else None,
+            "due_in_days": due_in_days,
         }
 
 
@@ -622,12 +628,21 @@ def add_task(project_id):
     if priority not in ("none", "low", "moderate", "high"):
         priority = "none"
 
+    due_date = None
+    try:
+        due_days = int(data.get("due_days", ""))
+        if due_days >= 0:
+            due_date = date.today() + timedelta(days=due_days)
+    except (ValueError, TypeError):
+        pass
+
     task = Task(
         project_id=project_id,
         title=title[:100],
         description=str(data.get("description", "")),
         container=container,
         priority=priority,
+        due_date=due_date,
         created_by=current_user.id,
     )
     db.session.add(task)
@@ -668,6 +683,13 @@ def update_task(project_id, task_id):
         task.description = str(data["description"])
     if "priority" in data and data["priority"] in ("none", "low", "moderate", "high"):
         task.priority = data["priority"]
+    if "due_days" in data:
+        try:
+            due_days = int(data["due_days"])
+            if due_days >= 0:
+                task.due_date = date.today() + timedelta(days=due_days)
+        except (ValueError, TypeError):
+            task.due_date = None
 
     db.session.commit()
     _sse_push(project_id, "task_updated", {**task.to_dict(), "by": current_user.id})
@@ -833,6 +855,13 @@ def admin_delete_user(user_id):
 
 with app.app_context():
     db.create_all()
+    # Auto-migrate: add due_date column if it doesn't exist yet
+    from sqlalchemy import inspect as _sa_inspect, text as _sa_text
+    _cols = [c["name"] for c in _sa_inspect(db.engine).get_columns("task")]
+    if "due_date" not in _cols:
+        with db.engine.connect() as _conn:
+            _conn.execute(_sa_text("ALTER TABLE task ADD COLUMN due_date DATE"))
+            _conn.commit()
     _sync_admin_user()
 
 # ---------------------------------------------------------------------------

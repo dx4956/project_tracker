@@ -9,6 +9,7 @@ function openAddModal(container) {
   pendingContainer = container;
   document.getElementById("taskTitle").value = "";
   document.getElementById("taskDesc").value = "";
+  document.getElementById("taskDueDays").value = "";
   document.querySelector('input[name="taskPriority"][value="none"]').checked =
     true;
   document.getElementById("addTaskColLabel").textContent =
@@ -31,19 +32,18 @@ async function submitAddTask() {
     document.querySelector('input[name="taskPriority"]:checked')?.value ||
     "none";
   const description = document.getElementById("taskDesc").value.trim();
+  const dueDaysRaw = document.getElementById("taskDueDays").value.trim();
+  const dueDays = dueDaysRaw !== "" ? parseInt(dueDaysRaw, 10) : null;
 
   closeModal("addTaskModal");
 
   try {
+    const body = { title, description, priority, container: pendingContainer };
+    if (dueDays !== null && !isNaN(dueDays) && dueDays >= 0) body.due_days = dueDays;
     const res = await fetch(`/project/${PROJECT_ID}/task`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        title,
-        description,
-        priority,
-        container: pendingContainer,
-      }),
+      body: JSON.stringify(body),
     });
     if (!res.ok) throw new Error();
     const task = await res.json();
@@ -77,6 +77,25 @@ function appendTaskCard(task, container) {
                  white-space:pre-line;">${escHtml(task.description)}</p>`
     : "";
 
+  let dueHtml = "";
+  if (task.due_in_days !== null && task.due_in_days !== undefined) {
+    let dueStyle, dueText;
+    if (task.due_in_days < 0) {
+      dueStyle = "background:#e84855; color:#fff; border:2px solid #b02030;";
+      const abs = Math.abs(task.due_in_days);
+      dueText = `${abs} day${abs !== 1 ? "s" : ""} overdue`;
+    } else if (task.due_in_days === 0) {
+      dueStyle = "background:#f5a500; color:#1a0900; border:2px solid #c07a00;";
+      dueText = "Due today";
+    } else {
+      dueStyle = "background:#4f46e5; color:#fff; border:2px solid #3730c0;";
+      dueText = `${task.due_in_days} day${task.due_in_days !== 1 ? "s" : ""} left`;
+    }
+    dueHtml = `<div style="padding-left:8px; margin-top:6px;">
+      <span style="${dueStyle} font-size:10px; font-weight:900; padding:2px 9px; border-radius:99px;">${dueText}</span>
+    </div>`;
+  }
+
   const deleteBtn = IS_OWNER
     ? `<button onclick="deleteTask(${task.id}, this)" title="Delete"
          style="background:none; border:none; cursor:pointer; font-size:15px; font-weight:900;
@@ -100,6 +119,7 @@ function appendTaskCard(task, container) {
       ${deleteBtn}
     </div>
     ${descHtml}
+    ${dueHtml}
     <div style="display:flex; align-items:center; justify-content:space-between; margin-top:10px; padding-left:8px;">
       ${priorityBadge}
       <span style="font-size:10px; color:#3a3455; font-weight:700;">${escHtml(task.created_at)}</span>
