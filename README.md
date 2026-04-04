@@ -19,11 +19,11 @@ A collaborative project management app built with Flask. Create projects, organi
 | Layer | Technology |
 |---|---|
 | Backend | Python 3, Flask 3 |
-| ORM | Flask-SQLAlchemy (SQLite) |
+| ORM | Flask-SQLAlchemy |
 | Auth | Flask-Login + Werkzeug password hashing |
 | Real-time | Server-Sent Events (SSE) via `threading.Queue` |
 | Frontend | Tailwind CSS (CDN), Vanilla JS |
-| Database | SQLite (file-based, zero config) |
+| Database | PostgreSQL |
 
 ## Project Structure
 
@@ -31,9 +31,9 @@ A collaborative project management app built with Flask. Create projects, organi
 project_tracker/
 ├── app.py                      # All routes, models, SSE infrastructure, business logic
 ├── requirements.txt
+├── .env                        # Local environment variables (not committed)
+├── .env.example                # Template for required environment variables
 ├── .gitignore
-├── instance/
-│   └── projecttracker.db       # Auto-created SQLite database
 ├── templates/
 │   ├── base.html               # Shared layout, Nunito font, cartoony CSS system
 │   ├── dashboard.html          # Project cards grid + new project modal
@@ -70,27 +70,31 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-**3. Run the app**
+**3. Configure environment variables**
+
+```bash
+cp .env.example .env
+# then fill in your values
+```
+
+**4. Run the app**
 
 ```bash
 python app.py
 ```
 
-The database is created automatically on first run. Open `http://127.0.0.1:5000` in your browser.
+Tables are created automatically on first run. Open `http://127.0.0.1:8080` in your browser.
 
 ## Environment Variables
 
-| Variable | Default | Description |
+| Variable | Required | Description |
 |---|---|---|
-| `SECRET_KEY` | `change-this-in-production` | Flask session signing key — **change before deploying** |
+| `SECRET_KEY` | Yes | Flask session signing key — **change before deploying** |
+| `DATABASE_URL` | Yes | PostgreSQL connection string, e.g. `postgresql://user:pass@host:5432/dbname` |
+| `ADMIN_USER` | No | Username for the built-in admin account |
+| `ADMIN_PASS` | No | Password for the built-in admin account |
 
-```bash
-# Windows
-set SECRET_KEY=your-random-secret-here
-
-# macOS / Linux
-export SECRET_KEY=your-random-secret-here
-```
+Copy `.env.example` to `.env` and fill in your values.
 
 ---
 

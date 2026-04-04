@@ -36,8 +36,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.environ["SECRET_KEY"]
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///projecttracker.db"
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+app.config["SQLALCHEMY_DATABASE_URI"] = os.environ["DATABASE_URL"]
 
 db = SQLAlchemy(app)
 login_manager = LoginManager(app)
@@ -184,6 +183,7 @@ def admin_required(f):
         if not current_user.is_authenticated or not current_user.is_admin:
             abort(403)
         return f(*args, **kwargs)
+
     return decorated
 
 
@@ -203,7 +203,9 @@ def _sync_admin_user():
     existing = User.query.filter_by(is_admin=True).first()
 
     if existing:
-        if existing.username == admin_user_env and existing.check_password(admin_pass_env):
+        if existing.username == admin_user_env and existing.check_password(
+            admin_pass_env
+        ):
             return  # Nothing changed
         # Credentials changed — tear down the old admin account
         for project in list(existing.owned_projects):
@@ -214,7 +216,8 @@ def _sync_admin_user():
 
     # Remove any regular user that would collide on username
     conflict = User.query.filter(
-        User.username == admin_user_env, User.is_admin == False  # noqa: E712
+        User.username == admin_user_env,
+        User.is_admin == False,  # noqa: E712
     ).first()
     if conflict:
         for project in list(conflict.owned_projects):
@@ -239,7 +242,13 @@ def _sync_admin_user():
 def restrict_admin_to_admin_routes():
     if not current_user.is_authenticated or not current_user.is_admin:
         return
-    allowed = {"admin_panel", "admin_edit_user", "admin_delete_user", "logout", "static"}
+    allowed = {
+        "admin_panel",
+        "admin_edit_user",
+        "admin_delete_user",
+        "logout",
+        "static",
+    }
     if request.endpoint not in allowed:
         return redirect(url_for("admin_panel"))
 
@@ -824,13 +833,6 @@ def admin_delete_user(user_id):
 
 with app.app_context():
     db.create_all()
-    # Migrate existing DBs that predate the is_admin column
-    with db.engine.connect() as _conn:
-        try:
-            _conn.execute(db.text("ALTER TABLE user ADD COLUMN is_admin BOOLEAN NOT NULL DEFAULT 0"))
-            _conn.commit()
-        except Exception:
-            pass
     _sync_admin_user()
 
 # ---------------------------------------------------------------------------
